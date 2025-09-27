@@ -220,7 +220,7 @@ if ((url.includes("wnba.com") || url.includes("data.wnba.com")) && selectedPlaye
     }
     
     return (
-        <div className="flex flex-col items-center justify-center min-h-screen p-6 sm:p-12 gap-8 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
+        <div className="flex  flex-col items-center justify-center min-h-screen p-6 sm:p-12 gap-8 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white         ">
         <VideoHeader className="absolute top-0 left-0 w-full" />
       
         <main className="flex flex-col items-center gap-6 w-full max-w-lg sm:max-w-2xl md:max-w-4xl">
