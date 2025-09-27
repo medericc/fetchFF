@@ -1,6 +1,6 @@
 'use client';
 import { Dialog, DialogTrigger, DialogContent, DialogHeader, DialogTitle, DialogDescription } from "@/components/ui/dialog";
-import { useState } from 'react';
+import { useState,useEffect } from 'react';
 import Image from 'next/image';
 import VideoHeader from './components/VideoHeader';
 import InputForm from './components/InputForm';
@@ -21,7 +21,14 @@ interface MatchAction {
     s2: string; // Score team 2
     player: string; // Nom du joueur
 }
-
+interface WNBAAction {
+  cl: string; // clock
+  p: string;  // player
+  de: string; // description
+  locX?: number;
+  locY?: number;
+  t?: string; // team
+}
 interface MatchData {
     pbp: MatchAction[]; // Play-by-play data
 }
@@ -38,6 +45,7 @@ export default function Home() {
 
     const matchLinksByPlayer: Record<string, { name: string; url: string }[]> = {
         "L. JEROME": [  
+          { name: "Basket Landes", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2713761/bs.html" },
           { name: "Toulouse", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2653903/bs.html" }, 
           { name: "Feytiat 3", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2648652/bs.html" },
          
@@ -55,7 +63,7 @@ export default function Home() {
             // { name: "Match 2", url: "https://example.com/lucile2" },
         ],
         "C. LEITE": [
-
+        
  { name: "Montpellier", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2513303/bs.html" },
           
           { name: "Chartres", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2513288/bs.html" },
@@ -67,6 +75,11 @@ export default function Home() {
             // { name: "Match 2", url: "https://example.com/carla2" },
         ]
     }; 
+    useEffect(() => {
+      setSelectedLink('');
+      setCsvGenerated(false);
+      setCsvData([]);
+    }, [selectedPlayer]);
     
     const playerMapping: Record<string, string> = {
         "Lucile": "L. JEROME",
@@ -74,53 +87,117 @@ export default function Home() {
     };
     
     const handleGenerate = async () => {
-        const url = selectedLink || customUrl;
-    
-        if (!url) {
-            setModalMessage("Sélectionne un Match 😎");
-            setIsModalOpen(true);
-            return;
+      const url = selectedLink || customUrl;
+      let effectivePlayer = selectedPlayer;
+if ((url.includes("wnba.com") || url.includes("data.wnba.com")) && selectedPlayer === "C. LEITE") {
+    effectivePlayer = "Okonkwo";
+}
+  
+      if (!url) {
+          setModalMessage("Sélectionne un Match 😎");
+          setIsModalOpen(true);
+          return;
+      }
+  
+      try {
+          let jsonUrl = "";
+          let data: any;
+  
+          // 🔁 Cas 1 : FFBB
+          if (url.includes("fibalivestats.dcd.shared.geniussports.com")) {
+              jsonUrl = url
+                  .replace(/\/u\/FFBB\//, '/data/')
+                  .replace(/\/bs\.html\/?/, '/')
+                  .replace(/\/$/, '') + '/data.json';
+  
+              const proxyUrl = `/api/proxy?url=${encodeURIComponent(jsonUrl)}`;
+              const response = await fetch(proxyUrl);
+              if (!response.ok) throw new Error("Erreur FFBB");
+              data = await response.json();
+  
+              const filteredData = data.pbp
+                  .filter((action) => action.player === selectedPlayer)
+                  .sort((a, b) => b.gt.localeCompare(a.gt));
+  
+              const csvContent = generateCSV(filteredData);
+              const rows = csvContent.split('\n').slice(1).map((row) => row.split(','));
+              setCsvData(rows);
+              setCsvGenerated(true);
+  
+          // 🔁 Cas 2 : WNBA JSON direct
+        } else if (url.includes("data.wnba.com")) {
+          jsonUrl = url;
+          const proxyUrl = `/api/proxy?url=${encodeURIComponent(jsonUrl)}`;
+          const response = await fetch(proxyUrl);
+          if (!response.ok) throw new Error("Erreur WNBA (JSON direct)");
+      
+          data = await response.json();
+          console.log("📦 [WNBA JSON direct] Données JSON brutes:", data);
+      
+          const playByPlay = data?.g?.pl;
+          if (!Array.isArray(playByPlay)) {
+              throw new Error("Format inattendu des données WNBA (JSON direct)");
           }
-    
-        try {
-            const jsonUrl = url
-                .replace(/\/u\/FFBB\//, '/data/')
-                .replace(/\/bs\.html\/?/, '/')
-                .replace(/\/$/, '') + '/data.json';
-    
-            console.log("URL JSON générée :", jsonUrl);
-    
+      
+          const filteredData = playByPlay
+              .filter((action: any) => action.p === effectivePlayer)
+              .sort((a: any, b: any) => b.cl.localeCompare(a.cl));
+      
+          const csvContent = generateWNBACSV(filteredData);
+          const rows = csvContent.split('\n').slice(1).map((row) => row.split(','));
+          setCsvData(rows);
+          setCsvGenerated(true);
+      
+  
+          // 🔁 Cas 3 : WNBA via www.wnba.com/game/xxx
+          } else if (url.includes("wnba.com/game/")) {
+            const match = url.match(/\/game\/(\d{10})/);
+            if (!match) throw new Error("URL WNBA invalide");
+        
+            const gameId = match[1];
+            jsonUrl = `https://data.wnba.com/data/10s/v2015/json/mobile_teams/wnba/2025/scores/pbp/${gameId}_full_pbp.json`;
+            console.log("💡 [WNBA transformée] URL du JSON:", jsonUrl);
+        
             const proxyUrl = `/api/proxy?url=${encodeURIComponent(jsonUrl)}`;
+            console.log("💡 [WNBA transformée] Appel proxy URL:", proxyUrl);
+        
             const response = await fetch(proxyUrl);
-    
-            if (!response.ok) {
-                console.error("Erreur de récupération :", response.status, await response.text());
-                setModalMessage(`${selectedPlayer === "L. JEROME" ? "Lucile" : "Carla"} s'échauffe 🏀`);
-                setIsWaitingModalOpen(true);
-                return;
-            }
-    
-            const data: MatchData = await response.json();
-            console.log("Données récupérées :", data);
-    
-            // Filtrer par joueur et trier du plus récent au plus ancien
-            const filteredData = data.pbp
-                .filter((action) => action.player === selectedPlayer)
-                .sort((a, b) => b.gt.localeCompare(a.gt));
-    
-            console.log("Actions triées pour", selectedPlayer, ":", filteredData);
-    
-            const csvContent = generateCSV(filteredData);
-            console.log("CSV généré :", csvContent);
-    
+            if (!response.ok) throw new Error("Erreur WNBA (transformée)");
+        
+            data = await response.json();
+            console.log("📦 [WNBA transformée] Données JSON brutes:", data);
+        
+            const playByPlay = data.g.pl;
+            const playerName = effectivePlayer;
+            console.log("🎯 [WNBA transformée] Joueur recherché:", playerName);
+        
+            const filteredData = playByPlay
+                .filter((action: any) => new RegExp(`\\b${playerName}\\b`, 'i').test(action.de || ''))
+                .sort((a: any, b: any) => b.cl.localeCompare(a.cl))
+                .map((action: any) => ({
+                    ...action,
+                    p: playerName
+                }));
+        
+            console.log("📊 [WNBA transformée] Actions filtrées:", filteredData);
+        
+            const csvContent = generateWNBACSV(filteredData);
+            console.log("🧾 [WNBA transformée] CSV généré:\n", csvContent);
+        
             const rows = csvContent.split('\n').slice(1).map((row) => row.split(','));
             setCsvData(rows);
             setCsvGenerated(true);
-        } catch (error) {
-            console.error("Erreur dans generateCsv:", error);
-            alert('Une erreur est survenue lors de la génération du CSV.');
-        }
-    };
+  
+          } else {
+              throw new Error("Source inconnue");
+          }
+  
+      } catch (error) {
+          console.error("Erreur :", error);
+          alert("Erreur lors de la génération du CSV.");
+      }
+  };
+  
     
 
     const generateCSV = (data: MatchAction[]): string => {
@@ -134,7 +211,14 @@ export default function Home() {
     
         return csv;
     };
-
+    function generateWNBACSV(actions: WNBAAction[]): string {
+      let csv = 'Horloge,Joueur,Événement,X,Y,Équipe\n';
+      actions.forEach((action) => {
+        csv += `${action.cl},${action.p},${action.de},${action.locX ?? ''},${action.locY ?? ''},${action.t ?? ''}\n`;
+      });
+      return csv;
+    }
+    
     return (
         <div className="flex flex-col items-center justify-center min-h-screen p-6 sm:p-12 gap-8 bg-gray-100 dark:bg-gray-900 text-gray-900 dark:text-white">
         <VideoHeader className="absolute top-0 left-0 w-full" />
