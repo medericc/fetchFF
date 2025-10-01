@@ -117,8 +117,8 @@ if ((url.includes("wnba.com") || url.includes("data.wnba.com")) && selectedPlaye
               data = await response.json();
   
               const filteredData = data.pbp
-                  .filter((action) => action.player === selectedPlayer)
-                  .sort((a, b) => b.gt.localeCompare(a.gt));
+                  .filter((action: MatchAction) => action.player === selectedPlayer)
+                  .sort((a: MatchAction, b: MatchAction) => b.gt.localeCompare(a.gt));
   
               const csvContent = generateCSV(filteredData);
               const rows = csvContent.split('\n').slice(1).map((row) => row.split(','));
