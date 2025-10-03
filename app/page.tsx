@@ -114,7 +114,16 @@ if ((url.includes("wnba.com") || url.includes("data.wnba.com")) && selectedPlaye
   
               const proxyUrl = `/api/proxy?url=${encodeURIComponent(jsonUrl)}`;
               const response = await fetch(proxyUrl);
-              if (!response.ok) throw new Error("Erreur FFBB");
+              if (!response.ok) {
+    // ici on personnalise le message selon la joueuse
+    const displayName = Object.keys(playerMapping).find(
+      (key) => playerMapping[key] === selectedPlayer
+    ) || selectedPlayer;
+
+    setModalMessage(`${displayName} s'échauffe 🏀`);
+    setIsWaitingModalOpen(true);
+    return;
+  }
               data = await response.json();
   
               const filteredData = data.pbp
@@ -195,9 +204,14 @@ if ((url.includes("wnba.com") || url.includes("data.wnba.com")) && selectedPlaye
           }
   
       } catch (error) {
-          console.error("Erreur :", error);
-          alert("Erreur lors de la génération du CSV.");
-      }
+  console.error("Erreur :", error);
+  const displayName = Object.keys(playerMapping).find(
+    (key) => playerMapping[key] === selectedPlayer
+  ) || selectedPlayer;
+
+  setModalMessage(`${displayName} s'échauffe 🏀`);
+  setIsWaitingModalOpen(true);
+}
   };
   
     
