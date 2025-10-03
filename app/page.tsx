@@ -44,8 +44,9 @@ export default function Home() {
     const [isWaitingModalOpen, setIsWaitingModalOpen] = useState(false);
 
     const matchLinksByPlayer: Record<string, { name: string; url: string }[]> = {
-        "L. JEROME": [  
-          { name: "Basket Landes", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724010/bs.html" },
+        "L. JEROME": [ 
+          { name: "Landerneau", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724014/bs.html" },
+          { name: "BLMA", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724010/bs.html" },
           { name: "Basket Landes", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2713761/bs.html" },
           { name: "Toulouse", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2653903/bs.html" }, 
           { name: "Feytiat 3", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2648652/bs.html" },
