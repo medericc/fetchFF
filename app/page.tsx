@@ -45,6 +45,7 @@ export default function Home() {
 
     const matchLinksByPlayer: Record<string, { name: string; url: string }[]> = {
         "L. JEROME": [ 
+          { name: "Bourges", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724019/bs.html" },
           { name: "Landerneau", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724014/bs.html" },
           { name: "BLMA", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724010/bs.html" },
           { name: "Basket Landes", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2713761/bs.html" },
