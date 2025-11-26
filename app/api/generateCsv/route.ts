@@ -4,7 +4,6 @@ import path from 'path';
 
 export const dynamic = 'force-dynamic';
 
-// Interface pour votre format de données interne
 interface MatchAction {
     period: string;
     time: string;
@@ -17,39 +16,48 @@ interface MatchData {
     actions: MatchAction[];
 }
 
-// 🔥 NOUVELLES INTERFACES POUR L'API FIBA
-// Interface pour une action individuelle de l'API FIBA
-interface FibaAction {
-    pId: string | number; // L'ID du joueur
-    SB?: number;          // Score de l'équipe B (ou période ?)
-    Time?: string;        // Le temps de jeu
-    ac?: string;          // Le code de l'action (ex: "2pt")
-    made?: boolean;       // Action réussie (tir) ?
-    SA?: number;          // Score de l'équipe A
+// FIBA interfaces
+interface FibaPlayer {
+    personId: number;
+    name: string;
 }
 
-// Interface pour la structure globale de la réponse FIBA
+interface FibaAction {
+    pId: number;
+    SB?: number;
+    Time?: string;
+    ac?: string;
+    made?: boolean;
+    SA?: number;
+}
+
 interface FibaResponse {
     gamePlayByPlay?: {
         content?: {
-            actions: FibaAction[]; // Un tableau d'actions FIBA
+            actions: FibaAction[];
+            players?: FibaPlayer[];
         };
     };
 }
 
+/* --------------------------------------------------------------------- */
+/* ----------------------------- ROUTE --------------------------------- */
+/* --------------------------------------------------------------------- */
 
 export async function POST(req: Request) {
     try {
-        const { url, playerId } = await req.json();
+        const { url, playerName } = await req.json();
 
         if (!url) {
             return NextResponse.json({ error: 'URL manquante' }, { status: 400 });
         }
-        if (!playerId) {
-            return NextResponse.json({ error: 'playerId manquant' }, { status: 400 });
+        if (!playerName) {
+            return NextResponse.json({ error: 'Nom joueur manquant' }, { status: 400 });
         }
 
-        // 🔥 CAS 1 : FIBA LINK
+        /* -------------------------------------------------------------- */
+        /* -------------------------- CAS FIBA -------------------------- */
+        /* -------------------------------------------------------------- */
         if (url.includes("fiba.basketball")) {
             console.log("➡️ Mode FIBA activé");
 
@@ -58,29 +66,40 @@ export async function POST(req: Request) {
                 return NextResponse.json({ error: "Impossible de charger FIBA" }, { status: 500 });
             }
 
-            // 👇 CORRECTION : On type la réponse JSON
             const fiba = await response.json() as FibaResponse;
 
-            // TypeScript sait maintenant que 'actions' est de type FibaAction[] | undefined
+            const players = fiba?.gamePlayByPlay?.content?.players;
             const actions = fiba?.gamePlayByPlay?.content?.actions;
-            
-            if (!actions) {
-                return NextResponse.json({ error: "Actions FIBA introuvables" }, { status: 500 });
+
+            if (!players || !actions) {
+                return NextResponse.json({ error: "Format FIBA invalide" }, { status: 500 });
             }
 
-            // 🟦 FILTRAGE DU JOUEUR PAR pId
-            // 'a' est maintenant correctement typé comme FibaAction
-            const filtered = actions.filter(a => a.pId === playerId);
+            /* 🔍 AUTO-DETECTION PLAYER ID */
+            const searchKey = playerName.replace(/\./g, "").toLowerCase();
 
-            // 🟦 Conversion en ton format interne MatchData
-            // 'a' est maintenant correctement typé comme FibaAction
+            const found = players.find(p =>
+                p.name.toLowerCase().includes(searchKey) ||
+                searchKey.includes(p.name.toLowerCase().split(" ").pop()!)
+            );
+
+            if (!found) {
+                return NextResponse.json({ error: "Joueur introuvable (auto-id)" }, { status: 404 });
+            }
+
+            const detectedId = found.personId;
+            console.log("🎯 PLAYER-ID détecté:", detectedId);
+
+            /* 🔥 FILTRAGE ACTIONS */
+            const filtered = actions.filter(a => a.pId === detectedId);
+
             const matchData: MatchData = {
                 actions: filtered.map(a => ({
-                    period: a.SB?.toString() ?? "", // Assumant que SB est la période
+                    period: a.SB?.toString() ?? "",
                     time: a.Time ?? "",
                     type: a.ac ?? "",
                     success: a.made ?? false,
-                    score: `${a.SA ?? 0}-${a.SB ?? 0}` // Ajout de ?? 0 pour la sécurité
+                    score: `${a.SA ?? 0}-${a.SB ?? 0}`
                 }))
             };
 
@@ -89,12 +108,17 @@ export async function POST(req: Request) {
             const filePath = path.join(process.cwd(), 'public', 'match_data.csv');
             fs.writeFileSync(filePath, csvContent);
 
-            return NextResponse.json({ success: true, file: '/match_data.csv' });
+            return NextResponse.json({
+                success: true,
+                file: '/match_data.csv',
+                autoId: detectedId
+            });
         }
 
-        // 🔥 CAS 2 : FFBB (SYSTÈME ACTUEL)
-        // ... (votre logique FFBB)
-        // Note : Cette partie n'utilise pas le playerId pour filtrer.
+        /* -------------------------------------------------------------- */
+        /* --------------------------- FFBB ----------------------------- */
+        /* -------------------------------------------------------------- */
+
         const jsonUrl = url
             .replace(/\/u\/FFBB\//, '/data/')
             .replace(/\/bs\.html\/?/, '/')
@@ -105,12 +129,9 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Données FFBB introuvables' }, { status: 500 });
         }
 
-        // Ici, vous affirmez que la réponse est DÉJÀ au bon format MatchData
-        // Si ce n'est pas le cas, cela plantera dans generateCSV
         const data: MatchData = await response.json();
 
         const csvContent = generateCSV(data);
-
         const filePath = path.join(process.cwd(), 'public', 'match_data.csv');
         fs.writeFileSync(filePath, csvContent);
 
@@ -122,6 +143,7 @@ export async function POST(req: Request) {
     }
 }
 
+/* CSV */
 function generateCSV(data: MatchData): string {
     let csv = 'Période,Horodatage,Action,Success,Score\n';
 
