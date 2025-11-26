@@ -113,7 +113,7 @@ if ((url.includes("wnba.com") || url.includes("data.wnba.com")) && selectedPlaye
           let data: any;
   // 🔁 Cas 0 : FIBA
 if (url.includes("fiba.basketball")) {
-    const response = await fetch("/api/fiba", {
+    const response = await fetch("/api/proxy?url=${encodeURIComponent(jsonUrl)}", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({
