@@ -45,7 +45,7 @@ export default function Home() {
 
     const matchLinksByPlayer: Record<string, { name: string; url: string }[]> = {
         "L. JEROME": [ 
-            { name: "Schio", url: "https://www.fiba.basketball/en/events/api/game-live-info/128317/detail" },
+            // { name: "Schio", url: "https://www.fiba.basketball/en/events/api/game-live-info/128317/detail" },
        
        { name: "Lyon", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2713748/bs.html" },
           { name: "Toulouse", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724033/bs.html" },
