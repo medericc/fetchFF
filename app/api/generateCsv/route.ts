@@ -29,6 +29,7 @@ interface FibaAction {
     ac?: string;
     made?: boolean;
     SA?: number;
+    
 }
 
 interface FibaResponse {
@@ -38,7 +39,23 @@ interface FibaResponse {
             players?: FibaPlayer[];
         };
     };
+
+    gameCompetitors?: {
+        content?: {
+            playersTeamA?: Array<{
+                personId: number;
+                firstName: string;
+                lastName: string;
+            }>;
+            playersTeamB?: Array<{
+                personId: number;
+                firstName: string;
+                lastName: string;
+            }>;
+        };
+    };
 }
+
 
 /* --------------------------------------------------------------------- */
 /* ----------------------------- ROUTE --------------------------------- */
@@ -55,65 +72,70 @@ export async function POST(req: Request) {
             return NextResponse.json({ error: 'Nom joueur manquant' }, { status: 400 });
         }
 
-        /* -------------------------------------------------------------- */
-        /* -------------------------- CAS FIBA -------------------------- */
-        /* -------------------------------------------------------------- */
-        if (url.includes("fiba.basketball")) {
-            console.log("➡️ Mode FIBA activé");
+      /* -------------------------- CAS FIBA -------------------------- */
+if (url.includes("fiba.basketball")) {
+    console.log("➡️ Mode FIBA activé");
 
-            const response = await fetch(url);
-            if (!response.ok) {
-                return NextResponse.json({ error: "Impossible de charger FIBA" }, { status: 500 });
-            }
+    const response = await fetch(url);
+    if (!response.ok) {
+        return NextResponse.json({ error: "Impossible de charger FIBA" }, { status: 500 });
+    }
 
-            const fiba = await response.json() as FibaResponse;
+    const fiba = await response.json() as FibaResponse;
 
-            const players = fiba?.gamePlayByPlay?.content?.players;
-            const actions = fiba?.gamePlayByPlay?.content?.actions;
+    // 🔥 récupérer les joueurs Team A + Team B
+    const playersTeamA = fiba?.gameCompetitors?.content?.playersTeamA || [];
+    const playersTeamB = fiba?.gameCompetitors?.content?.playersTeamB || [];
 
-            if (!players || !actions) {
-                return NextResponse.json({ error: "Format FIBA invalide" }, { status: 500 });
-            }
+    const players = [...playersTeamA, ...playersTeamB].map(p => ({
+        personId: p.personId,
+        name: `${p.firstName} ${p.lastName}`
+    }));
 
-            /* 🔍 AUTO-DETECTION PLAYER ID */
-            const searchKey = playerName.replace(/\./g, "").toLowerCase();
+    const actions = fiba?.gamePlayByPlay?.content?.actions;
+    if (!actions) {
+        return NextResponse.json({ error: "Aucune action trouvée" }, { status: 500 });
+    }
 
-            const found = players.find(p =>
-                p.name.toLowerCase().includes(searchKey) ||
-                searchKey.includes(p.name.toLowerCase().split(" ").pop()!)
-            );
+    /* 🔍 AUTO-DETECTION PLAYER ID */
+    const searchKey = playerName.replace(/\./g, "").toLowerCase();
 
-            if (!found) {
-                return NextResponse.json({ error: "Joueur introuvable (auto-id)" }, { status: 404 });
-            }
+    const found = players.find(p =>
+        p.name.toLowerCase().includes(searchKey) ||
+        searchKey.includes(p.name.toLowerCase().split(" ").pop()!)
+    );
 
-            const detectedId = found.personId;
-            console.log("🎯 PLAYER-ID détecté:", detectedId);
+    if (!found) {
+        return NextResponse.json({ error: "Joueur introuvable (auto-id)" }, { status: 404 });
+    }
 
-            /* 🔥 FILTRAGE ACTIONS */
-            const filtered = actions.filter(a => a.pId === detectedId);
+    const detectedId = found.personId;
+    console.log("🎯 PLAYER-ID détecté:", detectedId);
 
-            const matchData: MatchData = {
-                actions: filtered.map(a => ({
-                    period: a.SB?.toString() ?? "",
-                    time: a.Time ?? "",
-                    type: a.ac ?? "",
-                    success: a.made ?? false,
-                    score: `${a.SA ?? 0}-${a.SB ?? 0}`
-                }))
-            };
+    /* 🔥 FILTRAGE ACTIONS */
+    const filtered = actions.filter(a => a.pId === detectedId);
 
-            const csvContent = generateCSV(matchData);
+    const matchData: MatchData = {
+        actions: filtered.map(a => ({
+            period: a.SB?.toString() ?? "",
+            time: a.Time ?? "",
+            type: a.ac ?? "",
+            success: a.made ?? false,
+            score: `${a.SA ?? 0}-${a.SB ?? 0}`
+        }))
+    };
 
-            const filePath = path.join(process.cwd(), 'public', 'match_data.csv');
-            fs.writeFileSync(filePath, csvContent);
+    const csvContent = generateCSV(matchData);
 
-            return NextResponse.json({
-                success: true,
-                file: '/match_data.csv',
-                autoId: detectedId
-            });
-        }
+    const filePath = path.join(process.cwd(), 'public', 'match_data.csv');
+    fs.writeFileSync(filePath, csvContent);
+
+    return NextResponse.json({
+        success: true,
+        file: '/match_data.csv',
+        autoId: detectedId
+    });
+}
 
         /* -------------------------------------------------------------- */
         /* --------------------------- FFBB ----------------------------- */
