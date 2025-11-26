@@ -111,7 +111,35 @@ if ((url.includes("wnba.com") || url.includes("data.wnba.com")) && selectedPlaye
       try {
           let jsonUrl = "";
           let data: any;
-  
+  // 🔁 Cas 0 : FIBA
+if (url.includes("fiba.basketball")) {
+    const response = await fetch("/api/fiba", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            url,
+            playerName: selectedPlayer
+        })
+    });
+
+    if (!response.ok) {
+        setModalMessage("Erreur FIBA ❌");
+        setIsModalOpen(true);
+        return;
+    }
+
+    const result = await response.json();
+    console.log("📦 FIBA RESULT:", result);
+
+    const fileResponse = await fetch(result.file);
+    const fileText = await fileResponse.text();
+
+    const rows = fileText.split("\n").slice(1).map(r => r.split(","));
+    setCsvData(rows);
+    setCsvGenerated(true);
+    return;
+}
+
           // 🔁 Cas 1 : FFBB
           if (url.includes("fibalivestats.dcd.shared.geniussports.com")) {
               jsonUrl = url
