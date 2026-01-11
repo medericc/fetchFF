@@ -47,7 +47,7 @@ export default function Home() {
         "L. JEROME": [ 
             // { name: "Schio", url: "https://www.fiba.basketball/en/events/api/game-live-info/128317/detail" },
     //  { name: "Landerneau", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724068/bs.html" },
-     { name: "Bourges", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724077/bs.html" },
+     { name: "Bourges", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2713756/bs.html" },
        
         { name: "Landerneau", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724068/bs.html" },
        
