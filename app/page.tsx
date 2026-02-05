@@ -47,7 +47,11 @@ export default function Home() {
         "L. JEROME": [ 
             // { name: "Schio", url: "https://www.fiba.basketball/en/events/api/game-live-info/128317/detail" },
     //  { name: "Landerneau", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724068/bs.html" },
-       { name: "Angers", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724083/bs.html" },
+      
+      { name: "Toulouse", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724088/bs.html" },
+      
+    
+    { name: "Angers", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724083/bs.html" },
       
     
     { name: "Charnay", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724078/bs.html" },
@@ -58,9 +62,9 @@ export default function Home() {
        
         { name: "Landerneau", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724068/bs.html" },
        
-            { name: "Lattes Montpellier", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724062/bs.html" },
+      //       { name: "Lattes Montpellier", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724062/bs.html" },
        
-      { name: "Roche Vendée", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724051/bs.html" },
+      // { name: "Roche Vendée", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724051/bs.html" },
        
       //       { name: "Basket Landes", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724047/bs.html" },
       //       { name: "Chartres", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2724043/bs.html" },
