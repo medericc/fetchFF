@@ -103,7 +103,7 @@ export default function Home() {
             // { name: "Match 2", url: "https://example.com/lucile2" },
         ],
         "C. LEITE": [
-         { name: "Araski", url: "https://www.feb.es/competiciones/partido/2479540" },
+         { name: "Araski", url: "https://intrafeb.feb.es/LiveStats.API/api/v1/KeyFacts/2479540" },
      
 
  { name: "Montpellier", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2513303/bs.html" },

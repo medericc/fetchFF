@@ -75,7 +75,14 @@ export async function POST(req: Request) {
         if (url.includes("feb.es")) {
             console.log("➡️ Mode FEB activé");
 
-            const response = await fetch(url);
+          const response = await fetch(url, {
+    headers: {
+        "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64)",
+        "Accept": "application/json, text/plain, */*",
+        "Referer": "https://www.feb.es/",
+        "Origin": "https://www.feb.es"
+    }
+});
             if (!response.ok) {
                 return NextResponse.json({ error: "Impossible de charger FEB" }, { status: 500 });
             }
@@ -85,8 +92,13 @@ export async function POST(req: Request) {
             if (!Array.isArray(febData)) {
                 return NextResponse.json({ error: "Format FEB invalide" }, { status: 500 });
             }
-
-         const normalizedPlayer = playerName.toUpperCase().trim();
+console.log("📦 FEB DATA RAW:", febData);
+console.log("📦 TOTAL ACTIONS:", febData.length);
+       
+febData.forEach((a: any, i: number) => {
+    console.log(`ACTION ${i}:`, a.text);
+});
+const normalizedPlayer = playerName.toUpperCase().trim();
 
 const playerActions = febData.filter((a: any) =>
     a.text?.toUpperCase().includes(normalizedPlayer)
