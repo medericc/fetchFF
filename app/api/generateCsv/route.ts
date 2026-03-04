@@ -89,7 +89,7 @@ export async function POST(req: Request) {
            const normalizedPlayer = playerName.toUpperCase().trim();
 
 const playerActions = febData.filter((a: any) =>
-    a.text?.toUpperCase().startsWith(normalizedPlayer)
+    a.text?.toUpperCase().trim().startsWith(normalizedPlayer)
 );
 
             if (!playerActions.length) {
