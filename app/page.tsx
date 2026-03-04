@@ -103,7 +103,9 @@ export default function Home() {
             // { name: "Match 2", url: "https://example.com/lucile2" },
         ],
         "C. LEITE": [
-        
+         { name: "Araski", url: "https://www.feb.es/competiciones/partido/2479540" },
+     
+
  { name: "Montpellier", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2513303/bs.html" },
           
           { name: "Chartres", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2513288/bs.html" },
@@ -224,7 +226,39 @@ if (url.includes("fiba.basketball")) {
           const rows = csvContent.split('\n').slice(1).map((row) => row.split(','));
           setCsvData(rows);
           setCsvGenerated(true);
-      
+      /* 🔁 Cas FEB */
+if (url.includes("feb.es")) {
+
+    const response = await fetch("/api/proxy", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({
+            url,
+            playerName: selectedPlayer
+        })
+    });
+
+    if (!response.ok) {
+        setModalMessage("Erreur FEB ❌");
+        setIsModalOpen(true);
+        return;
+    }
+
+    const result = await response.json();
+
+    const fileResponse = await fetch(result.file);
+    const fileText = await fileResponse.text();
+
+    const rows = fileText
+        .split("\n")
+        .slice(1)
+        .filter(r => r.trim() !== "")
+        .map(r => r.split(","));
+
+    setCsvData(rows);
+    setCsvGenerated(true);
+    return;
+}
   
           // 🔁 Cas 3 : WNBA via www.wnba.com/game/xxx
           } else if (url.includes("wnba.com/game/")) {
