@@ -86,10 +86,10 @@ export async function POST(req: Request) {
                 return NextResponse.json({ error: "Format FEB invalide" }, { status: 500 });
             }
 
-           const normalizedPlayer = playerName.toUpperCase().trim();
+         const normalizedPlayer = playerName.toUpperCase().trim();
 
 const playerActions = febData.filter((a: any) =>
-    a.text?.toUpperCase().trim().startsWith(normalizedPlayer)
+    a.text?.toUpperCase().includes(normalizedPlayer)
 );
 
             if (!playerActions.length) {
