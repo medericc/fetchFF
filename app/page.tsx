@@ -103,7 +103,6 @@ export default function Home() {
             // { name: "Match 2", url: "https://example.com/lucile2" },
         ],
         "C. LEITE": [
-         { name: "Araski", url: "https://intrafeb.feb.es/LiveStats.API/api/v1/KeyFacts/2479540" },
      
 
  { name: "Montpellier", url: "https://fibalivestats.dcd.shared.geniussports.com/u/FFBB/2513303/bs.html" },
@@ -227,8 +226,8 @@ if (url.includes("fiba.basketball")) {
           setCsvData(rows);
           setCsvGenerated(true);
       /* 🔁 Cas FEB */
-if (url.includes("feb.es")) {
-
+} else if (url.includes("feb")) {
+console.log("MODE FEB");
     const response = await fetch("/api/proxy", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
@@ -258,7 +257,7 @@ if (url.includes("feb.es")) {
     setCsvData(rows);
     setCsvGenerated(true);
     return;
-}
+
   
           // 🔁 Cas 3 : WNBA via www.wnba.com/game/xxx
           } else if (url.includes("wnba.com/game/")) {
